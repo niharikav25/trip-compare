@@ -8,6 +8,24 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, Heart, Sparkles } from "lucide-react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -17,10 +35,20 @@ const navigation = [
 
 export function Navbar() {
   const pathname = usePathname()
+  const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [savedCount, setSavedCount] = useState(0)
 
+  // Login states
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userEmail, setUserEmail] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+
+  // Load saved packages count & login state on mount
   useEffect(() => {
     const updateCount = () => {
       const saved = localStorage.getItem("saved-packages")
@@ -36,12 +64,30 @@ export function Navbar() {
       }
     }
     
+    const checkLogin = () => {
+      const loggedIn = localStorage.getItem("user-logged-in") === "true"
+      const storedEmail = localStorage.getItem("user-email") || ""
+      setIsLoggedIn(loggedIn)
+      setUserEmail(storedEmail)
+    }
+    
     updateCount()
+    checkLogin()
+    
     window.addEventListener("saved-packages-updated", updateCount)
-    window.addEventListener("storage", updateCount)
+    window.addEventListener("user-login-updated", checkLogin)
+    window.addEventListener("storage", () => {
+      updateCount()
+      checkLogin()
+    })
+    
     return () => {
       window.removeEventListener("saved-packages-updated", updateCount)
-      window.removeEventListener("storage", updateCount)
+      window.removeEventListener("user-login-updated", checkLogin)
+      window.removeEventListener("storage", () => {
+        updateCount()
+        checkLogin()
+      })
     }
   }, [])
 
@@ -51,6 +97,52 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) {
+      setError("Email is required")
+      return
+    }
+    if (!password) {
+      setError("Password is required")
+      return
+    }
+    
+    // Simulate successful login
+    localStorage.setItem("user-logged-in", "true")
+    localStorage.setItem("user-email", email)
+    setIsLoggedIn(true)
+    setUserEmail(email)
+    setDialogOpen(false)
+    
+    toast({
+      title: "Welcome back!",
+      description: `Successfully logged in as ${email}.`,
+    })
+
+    // Reset fields
+    setEmail("")
+    setPassword("")
+    setError("")
+    
+    // Trigger event for cross-component updates
+    window.dispatchEvent(new Event("user-login-updated"))
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("user-logged-in")
+    localStorage.removeItem("user-email")
+    setIsLoggedIn(false)
+    setUserEmail("")
+    
+    toast({
+      title: "Logged out",
+      description: "You have been logged out of your account.",
+    })
+    
+    window.dispatchEvent(new Event("user-login-updated"))
+  }
 
   return (
     <header className={cn(
@@ -107,9 +199,48 @@ export function Navbar() {
               )}
             </Button>
           </Link>
-          <Button className="hidden sm:flex rounded-full bg-primary/5 hover:bg-primary/10 text-foreground border border-primary/20 font-semibold px-6 backdrop-blur-md">
-            Login
-          </Button>
+          
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full border border-primary/20 shadow-sm p-0 focus-visible:ring-0">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-[#5E121E] text-primary-foreground font-serif font-bold text-sm">
+                      {userEmail ? userEmail.slice(0, 2).toUpperCase() : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-background/95 border border-primary/10 shadow-lg rounded-xl mt-2 p-1" align="end">
+                <DropdownMenuLabel className="font-semibold text-xs text-muted-foreground px-3 py-2 border-b border-border/40">
+                  Logged in as <div className="text-sm font-bold text-foreground truncate mt-0.5">{userEmail}</div>
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href="/saved" className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg hover:bg-primary/5 cursor-pointer">
+                    <Heart className="h-4 w-4 text-primary" />
+                    My Saved Packages
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/compare" className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg hover:bg-primary/5 cursor-pointer">
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    Compare Tool
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-border/40 my-1" />
+                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg text-destructive hover:bg-destructive/5 hover:text-destructive cursor-pointer">
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              onClick={() => setDialogOpen(true)}
+              className="hidden sm:flex rounded-full bg-primary/5 hover:bg-primary/10 text-foreground border border-primary/20 font-semibold px-6 backdrop-blur-md"
+            >
+              Login
+            </Button>
+          )}
 
           {/* Mobile Navigation */}
           <Sheet open={open} onOpenChange={setOpen}>
@@ -133,14 +264,81 @@ export function Navbar() {
                     {item.name}
                   </Link>
                 ))}
-                <Button className="w-full max-w-xs rounded-full bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-lg">
-                  Get Started
-                </Button>
+                
+                {isLoggedIn ? (
+                  <>
+                    <div className="text-sm font-medium text-muted-foreground border-t border-primary/10 pt-4 w-full text-center">
+                      Logged in as <span className="font-semibold text-foreground">{userEmail}</span>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        handleLogout()
+                        setOpen(false)
+                      }}
+                      className="w-full max-w-xs rounded-full border-primary/20 hover:bg-primary/5 py-6 text-lg font-semibold"
+                    >
+                      Log Out
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => {
+                      setOpen(false)
+                      setDialogOpen(true)
+                    }}
+                    className="w-full max-w-xs rounded-full bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-lg font-bold"
+                  >
+                    Login / Get Started
+                  </Button>
+                )}
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </nav>
+
+      {/* Global Client-Side Login Dialog Modal */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-background/95 border border-primary/20 shadow-xl rounded-2xl backdrop-blur-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl font-bold text-primary text-center">
+              TripCompare AI Login
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleLogin} className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="font-medium text-foreground">Email Address</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="name@example.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="border-border/60 bg-muted/30 focus:border-primary/50 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="font-medium text-foreground">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="border-border/60 bg-muted/30 focus:border-primary/50 rounded-xl"
+              />
+            </div>
+            {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+            <Button type="submit" className="w-full font-bold py-6 rounded-full shadow-md mt-4">
+              Log In
+            </Button>
+            <div className="text-center text-xs text-muted-foreground mt-4 pt-2 border-t border-border/40">
+              Demo login. Enter any email & password.
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </header>
   )
 }
