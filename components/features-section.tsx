@@ -86,10 +86,10 @@ export function FeaturesSection() {
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.color} blur-xl opacity-40 group-hover:opacity-60 transition-opacity`} />
                 </div>
                 
-                <h3 className="mb-4 text-2xl font-bold text-white group-hover:text-primary transition-colors">
+                <h3 className="mb-4 text-2xl font-bold text-white group-hover:text-amber-400 transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-slate-400 leading-relaxed text-lg">
+                <p className="text-[#FAF4E8]/60 leading-relaxed text-lg">
                   {feature.description}
                 </p>
 

@@ -216,17 +216,17 @@ export function Chatbot() {
             <div className="flex items-center justify-between bg-gradient-to-r from-secondary to-[#2D080C] p-6 text-[#FAF4E8] border-b border-primary/20">
               <div className="flex items-center gap-4">
                 <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-md">
-                  <Sparkles className="h-6 w-6 text-primary" />
+                  <Sparkles className="h-6 w-6 text-amber-400" />
                   <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-secondary" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg leading-none font-serif text-primary">TripBot AI</h3>
+                  <h3 className="font-bold text-lg leading-none font-serif text-amber-400">TripBot AI</h3>
                   <p className="mt-1 text-xs font-medium text-[#FAF4E8]/60">Travel Advisor Mode</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-xl p-2 transition-all hover:bg-primary/10 hover:text-primary hover:rotate-90 text-[#FAF4E8]/80"
+                className="rounded-xl p-2 transition-all hover:bg-white/10 hover:text-white hover:rotate-90 text-[#FAF4E8]/80"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -265,7 +265,7 @@ export function Chatbot() {
                       <div
                         className={`inline-block rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                           message.role === "assistant"
-                            ? "bg-secondary/30 text-foreground border border-primary/20 font-medium"
+                            ? "bg-secondary/30 text-[#FAF4E8] border border-primary/20 font-medium"
                             : "bg-primary text-primary-foreground font-semibold"
                         }`}
                       >
@@ -299,10 +299,10 @@ export function Chatbot() {
                                   </div>
                                 </div>
                                 <div className="p-3">
-                                  <h4 className="font-bold text-sm text-foreground line-clamp-1">{pkg.name}</h4>
-                                  <p className="text-[10px] text-muted-foreground mb-2">by {pkg.company.name}</p>
+                                  <h4 className="font-bold text-sm text-[#FAF4E8] line-clamp-1">{pkg.name}</h4>
+                                  <p className="text-[10px] text-[#FAF4E8]/60 mb-2">by {pkg.company.name}</p>
                                   
-                                  <div className="mb-3 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                                  <div className="mb-3 flex flex-wrap items-center gap-2 text-[10px] text-[#FAF4E8]/70">
                                     <span className="flex items-center gap-0.5">
                                       <MapPin className="h-3 w-3 shrink-0" />
                                       {pkg.destination}
@@ -315,11 +315,11 @@ export function Chatbot() {
 
                                   <div className="flex items-center justify-between pt-1 border-t border-primary/10">
                                     <div>
-                                      <span className="text-sm font-bold text-primary">
+                                      <span className="text-sm font-bold text-amber-400">
                                         ₹{pkg.price.toLocaleString()}
                                       </span>
                                       {pkg.originalPrice > pkg.price && (
-                                        <span className="ml-1.5 text-[10px] text-muted-foreground line-through">
+                                        <span className="ml-1.5 text-[10px] text-[#FAF4E8]/50 line-through">
                                           ₹{pkg.originalPrice.toLocaleString()}
                                         </span>
                                       )}
